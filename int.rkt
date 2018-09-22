@@ -60,9 +60,9 @@
 (define int-TM
   `((read q Right)
     (init (:= q-tail q)
-           (:= Left `())
-           (goto loop))
-    (loop (if (null? q-tail) stop cont))
+          (:= Left `())
+          (goto loop))
+    (loop (if (empty? q-tail) stop cont))
 
     (cont  (:= instr (cdar q-tail))
            (:= i (car instr))
@@ -80,7 +80,7 @@
               (:= Left (safe-cdr Left))
               (goto loop))
     (do_write (:= symbol (cadr instr))
-              (:= Right (list-set Right 0 symbol))
+              (:= Right (safe-set-head Right symbol))
               (goto loop))
     (do_goto  (:= next-label (cadr instr))
               (goto jump))

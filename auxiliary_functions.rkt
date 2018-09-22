@@ -45,6 +45,8 @@
   (define (starts-with-label label instruction) (equal? label (car instruction)))
   (member label q starts-with-label))
 
-(define (safe-car maybe-empty) (if (null? maybe-empty) `B (car maybe-empty)))
+(define (safe-car maybe-empty) (if (empty? maybe-empty) `B (car maybe-empty)))
 
-(define (safe-cdr maybe-empty) (if (null? maybe-empty) `() (cdr maybe-empty)))
+(define (safe-cdr maybe-empty) (if (empty? maybe-empty) `() (cdr maybe-empty)))
+
+(define (safe-set-head maybe-empty value) (if (empty? maybe-empty) (cons value empty) (list-set maybe-empty 0 value)))
