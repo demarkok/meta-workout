@@ -40,3 +40,11 @@
 (define (eval-exp st e)
   (define ee (subst st e))
   (my-eval ee))
+
+(define (new-q-tail q label)
+  (define (starts-with-label label instruction) (equal? label (car instruction)))
+  (member label q starts-with-label))
+
+(define (safe-car maybe-empty) (if (null? maybe-empty) `B (car maybe-empty)))
+
+(define (safe-cdr maybe-empty) (if (null? maybe-empty) `() (cdr maybe-empty)))

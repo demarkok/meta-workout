@@ -1,7 +1,7 @@
 #lang racket
 
 (require "auxiliary_functions.rkt")
-(provide int)
+(provide int int-TM)
 
 (define fill_in
   (lambda () '()))
@@ -56,3 +56,39 @@
 
 (define (int-assn st assn)
   (match assn [`(:=, var, expr) (st-set st var (eval-exp st expr))]))
+
+(define int-TM
+  `((read q Right)
+    (init (:= q-tail q)
+           (:= Left `())
+           (goto loop))
+    (loop (if (null? q-tail) stop cont))
+
+    (cont  (:= instr (cdar q-tail))
+           (:= i (car instr))
+           (:= q-tail (cdr q-tail))
+           (if (equal? i `right) do_right cont1))
+    (cont1 (if (equal? i `left)  do_left  cont2))
+    (cont2 (if (equal? i `write) do_write cont3))
+    (cont3 (if (equal? i `goto)  do_goto  cont4))
+    (cont4 (if (equal? i `if)    do_if    err))
+
+    (do_right (:= Left (cons (safe-car Right) Left))
+              (:= Right (safe-cdr Right))
+              (goto loop))
+    (do_left  (:= Right (cons (safe-car Left) Right))
+              (:= Left (safe-cdr Left))
+              (goto loop))
+    (do_write (:= symbol (cadr instr))
+              (:= Right (list-set Right 0 symbol))
+              (goto loop))
+    (do_goto  (:= next-label (cadr instr))
+              (goto jump))
+    (do_if    (:= symbol (cadr instr))
+              (:= next-label (cadddr instr))
+              (if (equal? symbol (safe-car Right)) jump loop))
+
+    (jump (:= q-tail (new-q-tail q next-label))
+          (goto loop))
+    (err  (return `(unknown-instruction i)))
+    (stop (return Right))))
