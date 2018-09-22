@@ -32,21 +32,27 @@
      evaluates expression expr in environment st
    )
 
-(define int
-  (lambda (p d)
-    (fill_in)))
+(define (int p d)
+  (define input-variables (cdar p))
+  (define first-bb (cdadr p))
+  (define initial-state (initial-st input-variables d))
+  (define program (initial-prog p))
+  (int-bb program initial-state first-bb))
 
-(define int-bb
-  (lambda (prog st bb)
-    (fill_in)))
+(define (int-bb prog st bb)
+  (define (apply-assignments state assignments)
+    (for/fold ([result-state state])
+              ([assignment assignments])
+      (int-assn result-state assignment)))
+  (match bb
+    [(list assignments ... jump) (int-jump prog (apply-assignments st assignments) jump)]))
 
-(define int-jump
-  (lambda (prog st jump)
-    (fill_in)))
+(define (int-jump prog st jump)
+  (match jump
+    [`(goto, label) (int-bb prog st (bb-lookup prog label))]
+    [`(if, condition, then_branch, else_branch)
+      (int-bb prog st (bb-lookup prog (if (eval-exp st condition) then_branch else_branch)))]
+    [`(return, expr) (eval-exp st expr)]))
 
-(define int-assn
-  (lambda (st assn)
-    (fill_in)))
-
-(define int-TM
-  (fill_in))
+(define (int-assn st assn)
+  (match assn [`(:=, var, expr) (st-set st var (eval-exp st expr))]))
