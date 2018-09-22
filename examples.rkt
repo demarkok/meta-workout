@@ -17,6 +17,7 @@
 (int int-TM '(((0 if 0 goto 3) (1 right) (2 goto 0) (3 write 1)) 
               (1 1 0 1 1 0 1)))
 
+; binary +1 
 (define inc '((0 if 1 goto 4) 
               (100 goto 3) 
               (4 write 0) 
