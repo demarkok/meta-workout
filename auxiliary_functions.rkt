@@ -50,3 +50,21 @@
 (define (safe-cdr maybe-empty) (if (empty? maybe-empty) `() (cdr maybe-empty)))
 
 (define (safe-set-head maybe-empty value) (if (empty? maybe-empty) (cons value empty) (list-set maybe-empty 0 value)))
+
+
+(define first-label caadr)
+
+(define input-vars cdar)
+
+(define (init-residual program binded-vars)
+  `(, (cons `read (drop (input-vars program) binded-vars))))
+
+(define (init-code point) (cons point empty))
+
+(define (add-if-isnt-marked elem marked list)
+  (if (set-member? marked elem) list (cons elem list)))
+
+(define (is-static division e)
+  (match e
+    [`(,x . ,y) (and (is-static division x) (is-static division y))]
+    [`,x (not (set-member? (second division) x))]))
