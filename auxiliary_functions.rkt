@@ -57,7 +57,7 @@
 (define input-vars cdar)
 
 (define (init-residual program binded-vars)
-  `(, (cons `read (drop (input-vars program) binded-vars))))
+  `(, (cons `read (set-subtract (input-vars program) binded-vars))))
 
 (define (init-code point) (cons point empty))
 

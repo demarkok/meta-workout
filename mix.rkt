@@ -11,9 +11,9 @@
 (define mix 
   `((read program division vs0)
     (init (:= pp0 (first-label program))
-          (:= pending `((,pp0 ,(initial-st (take (input-vars program) (length vs0)) vs0))))
+          (:= pending `((,pp0 ,(initial-st (first vs0) (second vs0)))))
           (:= marked `())
-          (:= residual-code (init-residual program (length vs0)))
+          (:= residual-code (init-residual program (first vs0)))
           (goto loop1))
     
     (loop1 (if (empty? pending) stop1 cont1))
