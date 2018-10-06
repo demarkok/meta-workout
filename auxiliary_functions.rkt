@@ -67,4 +67,4 @@
 (define (is-static division e)
   (match e
     [`(,x . ,y) (and (is-static division x) (is-static division y))]
-    [`,x (not (set-member? (second division) x))]))
+    [`,x (not (set-member? division x))]))

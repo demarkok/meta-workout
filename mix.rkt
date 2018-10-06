@@ -7,7 +7,7 @@
 ; TODO: (subst => reduce)
 
 
-; Division should be a pair of two lists: static variables names and dynamic ones
+; Division should the list of dynamic variables
 (define mix 
   `((read program division vs0)
     (init (:= pp0 (first-label program))
@@ -19,7 +19,7 @@
     (loop1 (if (empty? pending) stop1 cont1))
     (cont1 (:= point (car pending))
            (:= pp (first point))
-           (:= vs (second))
+           (:= vs (second point))
            (:= pending (cdr pending))
            (:= marked (cons point marked))
            (:= bb (bb-lookup program pp))
