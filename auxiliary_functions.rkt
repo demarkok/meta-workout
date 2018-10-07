@@ -59,12 +59,14 @@
 (define (init-residual program binded-vars)
   `(, (cons `read (set-subtract (input-vars program) binded-vars))))
 
-(define (init-code point) (cons point empty))
+(define (create-label point) point)
+
+(define (init-code point) (cons (create-label point) empty))
 
 (define (add-if-isnt-marked elem marked list)
   (if (set-member? marked elem) list (cons elem list)))
 
-(define (is-static division e)
+(define (static? division e)
   (match e
-    [`(,x . ,y) (and (is-static division x) (is-static division y))]
+    [`(,x . ,y) (and (static? division x) (static? division y))]
     [`,x (not (set-member? division x))]))
