@@ -11,8 +11,9 @@
   `((read program division vs0)
     (init (:= pp0 (first-label program))
           (:= pending `((,pp0 ,(initial-st (first vs0) (second vs0)))))
-          (:= marked `(,pp0))
+          (:= marked `(,(car pending)))
           (:= residual-code (init-residual program (first vs0)))
+          (:= label-dict (dict-set #hash() (car pending) 0))
           (goto loop1))
     
     (loop1 (if (empty? pending) stop1 cont1))
@@ -21,7 +22,7 @@
            (:= vs (second point))
            (:= pending (cdr pending))
            (:= bb (bb-lookup program pp))
-           (:= code (init-code point))
+           (:= code (init-code (get-label label-dict point)))
            (goto loop2))
 
       (loop2 (if (empty? bb) stop2 cont2))
@@ -49,11 +50,20 @@
                (if (static? division expr) static-branch-if dynamic-branch-if))
           (static-branch-if (:= bb (bb-lookup program (if (eval-exp vs expr) then-label else-label)))
                             (goto loop2))
-          (dynamic-branch-if (:= pending (add-if-isnt-marked (create-label `(,then-label ,vs)) marked pending))
-                             (:= marked (cons (create-label `(,then-label ,vs)) marked))
-                             (:= pending (add-if-isnt-marked (create-label `(,else-label ,vs)) marked pending))
-                             (:= marked (cons (create-label `(,else-label ,vs)) marked))
-                             (:= code (cons `(if ,(subst vs expr) ,(create-label `(,then-label ,vs)) ,(create-label `(,else-label ,vs))) code))
+          (dynamic-branch-if 
+                             (:= label-dict (put-point label-dict `(,then-label ,vs)))
+                             (:= then-gen-label (get-label label-dict `(,then-label ,vs)))
+
+                             (:= pending (add-if-isnt-marked `(,then-label ,vs) marked pending))
+                             (:= marked (cons `(,then-label ,vs) marked))
+                             
+                             (:= label-dict (put-point label-dict `(,else-label ,vs)))
+                             (:= else-gen-label (get-label label-dict `(,else-label ,vs)))
+
+                             (:= pending (add-if-isnt-marked `(,else-label ,vs) marked pending))
+                             (:= marked (cons `(,else-label ,vs) marked))
+                             
+                             (:= code (cons `(if ,(subst vs expr) ,then-gen-label ,else-gen-label) code))
                              (goto loop2))
           
         (do-goto (:= next-label (cadr instruction))

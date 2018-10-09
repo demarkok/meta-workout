@@ -57,11 +57,13 @@
 (define input-vars cdar)
 
 (define (init-residual program binded-vars)
-  `(, (cons `read (set-subtract (input-vars program) binded-vars))))
+  `(,(cons `read (set-subtract (input-vars program) binded-vars))))
 
-(define (create-label point) point)
+(define get-label dict-ref)
+(define (put-point dict point)
+  (if (dict-has-key? dict point) dict (dict-set dict point (length (dict-keys dict)))))
 
-(define (init-code point) (cons (create-label point) empty))
+(define (init-code point) `(,point))
 
 (define (add-if-isnt-marked elem marked list)
   (if (set-member? marked elem) list (cons elem list)))
