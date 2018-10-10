@@ -24,7 +24,7 @@
            (:= labels (get-labels program))
            (goto loopX))
 
-      (loopX (if (empty? labels) stop2 contX))
+      (loopX (if (empty? labels) err2 contX))
       (contX (:= ppp (car labels))
              (:= labels (cdr labels))
              (if (equal? ppp pp) contX2 loopX))
@@ -56,8 +56,12 @@
                  (:= then-label (caddr instruction))
                  (:= else-label (cadddr instruction))
                  (if (static? division expr) static-branch-if dynamic-branch-if))
-            (static-branch-if (:= bb (bb-lookup program (if (eval-exp vs expr) then-label else-label)))
-                              (goto loop2))
+            (static-branch-if (if (eval-exp vs expr) sbi-true sbi-false))
+              (sbi-true (:= bb (bb-lookup program then-label))
+                        (goto loop2))
+              (sbi-false (:= bb (bb-lookup program else-label))
+                         (goto loop2))
+
             (dynamic-branch-if 
                                (:= label-dict (put-point label-dict `(,then-label ,vs)))
                                (:= then-gen-label (get-label label-dict `(,then-label ,vs)))
@@ -82,8 +86,11 @@
                      (:= code (cons `(return ,(subst vs expr)) code))
                      (goto loop2))
 
-        (stop2 (:= residual-code (cons (reverse code) residual-code))
+        (stop2 
+               (:= residual-code (cons (reverse code) residual-code))
+               ; (:= printf (println (reverse code)))
                (goto loop1))
 
     (stop1 (return (reverse residual-code)))
-    (err  (return `(unknown-instruction i)))))
+    (err  (return `(unknown-instruction i)))
+    (err2 (return `(wtf?)))))

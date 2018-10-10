@@ -48,3 +48,10 @@
                                 ((q) (,tm-inc)))))
 ; test first futamura projection for tm-inc
 (ok? `(0 0 1 1 1 0 1) (int futamura1-inc `((1 1 0 1 1 0 1))))
+
+
+(define futamura2 (int mix `(,mix
+                            (vs0 pending marked residual-code label-dict point pp vs code then-gen-label else-gen-label)
+                            ((program division) (,int-TM (Right Left))))))
+
+futamura2
