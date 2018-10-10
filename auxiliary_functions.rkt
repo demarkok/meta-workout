@@ -72,3 +72,6 @@
   (match e
     [`(,x . ,y) (and (static? division x) (static? division y))]
     [`,x (not (set-member? division x))]))
+
+(define (get-labels program) 
+  (map car (cdr program)))
