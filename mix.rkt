@@ -13,7 +13,6 @@
           (:= pending `((,pp0 ,(initial-st (first vs0) (second vs0)))))
           (:= marked `(,(car pending)))
           (:= residual-code (init-residual program (first vs0)))
-          (:= label-dict (dict-set #hash() (car pending) 0))
           (goto loop1))
     
     (loop1 (if (empty? pending) stop1 cont1))
@@ -21,7 +20,8 @@
            (:= pp (first point))
            (:= vs (second point))
            (:= pending (cdr pending))
-           (:= labels (get-labels program))
+           (:= labels (get-labels program division))
+           (:= code (init-code point))
            (goto loopX))
 
       (loopX (if (empty? labels) err2 contX))
@@ -30,10 +30,11 @@
              (if (equal? ppp pp) contX2 loopX))
       (contX2 
              (:= bb (bb-lookup program ppp))
-             (:= code (init-code (get-label label-dict point)))
              (goto loop2))
 
-        (loop2 (if (empty? bb) stop2 cont2))
+        (loop2 (:= instruction `())
+               (:= i `())
+               (if (empty? bb) stop2 cont2))
         (cont2 (:= instruction (car bb))
                (:= bb (cdr bb))
                (:= i (car instruction))
@@ -44,51 +45,38 @@
           (switch2 (if (equal? i `goto) do-goto switch3))
           (switch3 (if (equal? i `return) do-return err))
 
-          (do-assignment (:= x (cadr instruction))
-                         (:= expr (caddr instruction))
-                         (if (static? division x) static-branch-ass dynamic-branch-ass))
-            (static-branch-ass  (:= vs (st-set vs x (eval-exp vs expr)))
+          (do-assignment (if (static? division (cadr instruction)) static-branch-ass dynamic-branch-ass))
+            (static-branch-ass  (:= vs (st-set vs (cadr instruction) (eval-exp vs (caddr instruction))))
                                 (goto loop2))
-            (dynamic-branch-ass (:= code (cons `(:= ,x ,(subst vs expr)) code))
+            (dynamic-branch-ass (:= code (cons `(:= ,(cadr instruction) ,(subst vs (caddr instruction))) code))
                                 (goto loop2))
           
-          (do-if (:= expr (cadr instruction))
-                 (:= then-label (caddr instruction))
-                 (:= else-label (cadddr instruction))
-                 (if (static? division expr) static-branch-if dynamic-branch-if))
-            (static-branch-if (if (eval-exp vs expr) sbi-true sbi-false))
-              (sbi-true (:= bb (bb-lookup program then-label))
+          (do-if (if (static? division (cadr instruction)) static-branch-if dynamic-branch-if))
+            (static-branch-if (if (eval-exp vs (cadr instruction)) sbi-true sbi-false))
+              (sbi-true (:= bb (bb-lookup program (caddr instruction)))
                         (goto loop2))
-              (sbi-false (:= bb (bb-lookup program else-label))
+              (sbi-false (:= bb (bb-lookup program (cadddr instruction)))
                          (goto loop2))
-
-            (dynamic-branch-if 
-                               (:= label-dict (put-point label-dict `(,then-label ,vs)))
-                               (:= then-gen-label (get-label label-dict `(,then-label ,vs)))
-
-                               (:= pending (add-if-isnt-marked `(,then-label ,vs) marked pending))
-                               (:= marked (cons `(,then-label ,vs) marked))
+            (dynamic-branch-if (:= pending (add-if-isnt-marked `(,(cadddr instruction) ,vs) marked pending))
+                               (:= marked (cons `(,(cadddr instruction) ,vs) marked))
                                
-                               (:= label-dict (put-point label-dict `(,else-label ,vs)))
-                               (:= else-gen-label (get-label label-dict `(,else-label ,vs)))
+                               (:= pending (add-if-isnt-marked `(,(caddr instruction) ,vs) marked pending))
+                               (:= marked (cons `(,(caddr instruction) ,vs) marked))
 
-                               (:= pending (add-if-isnt-marked `(,else-label ,vs) marked pending))
-                               (:= marked (cons `(,else-label ,vs) marked))
-                               
-                               (:= code (cons `(if ,(subst vs expr) ,then-gen-label ,else-gen-label) code))
+                               (:= code (cons `(if ,(subst vs (cadr instruction)) (,(caddr instruction) ,vs) (,(cadddr instruction) ,vs)) code))
                                (goto loop2))
-            
-          (do-goto (:= next-label (cadr instruction))
-                   (:= bb (bb-lookup program next-label))
+        
+          (do-goto 
+                   (:= bb (bb-lookup program (cadr instruction)))
                    (goto loop2))
 
-          (do-return (:= expr (cadr instruction)) 
-                     (:= code (cons `(return ,(subst vs expr)) code))
+          (do-return  
+                     (:= code (cons `(return ,(subst vs (cadr instruction))) code))
                      (goto loop2))
 
         (stop2 
                (:= residual-code (cons (reverse code) residual-code))
-               ; (:= printf (println (reverse code)))
+               ; (:= priii (println (length marked)))
                (goto loop1))
 
     (stop1 (return (reverse residual-code)))

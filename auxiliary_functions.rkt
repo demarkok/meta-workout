@@ -73,5 +73,10 @@
     [`(,x . ,y) (and (static? division x) (static? division y))]
     [`,x (not (set-member? division x))]))
 
-(define (get-labels program) 
-  (map car (cdr program)))
+(define (get-labels program division)
+  (cons (first-label program)
+    (for*/list ([bb (cdr program)]
+               [instr (cdr bb)]
+               #:when (and (equal? `if (car instr)) (not (static? division (cadr instr))))
+               [label (cddr instr)])
+      label)))

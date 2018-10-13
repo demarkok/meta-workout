@@ -50,8 +50,17 @@
 (ok? `(0 0 1 1 1 0 1) (int futamura1-inc `((1 1 0 1 1 0 1))))
 
 
+; second futamura projection:
+; generate a compiler from TM into FlowChart, compilers gets v0: `((q), (,program)) where program is a TM source code.
 (define futamura2 (int mix `(,mix
-                            (vs0 pending marked residual-code label-dict point pp vs code then-gen-label else-gen-label)
+                            (vs0 pending marked residual-code label-dict point pp vs code then-gen-label else-gen-label priii)
                             ((program division) (,int-TM (Right Left))))))
 
-futamura2
+; Compiles tm-simple using the generated compiler
+(define futamura2-simple (int futamura2 `(((q) (,tm-simple)))))
+(ok? futamura1-simple futamura2-simple)
+
+; Compiles tm-inc using the generated compiler
+(define futamura2-inc (int futamura2 `(((q) (,tm-inc)))))
+(ok? futamura1-inc futamura2-inc)
+
